@@ -26,11 +26,13 @@ import java.util.regex.Pattern;
 public class TelegramBotUpdatesListener implements UpdatesListener {
     private final NotificationTaskRepository notificationTaskRepository;
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-    @Autowired
-    private TelegramBot telegramBot;
+    private final TelegramBot telegramBot;
 
-    public TelegramBotUpdatesListener(NotificationTaskRepository notificationTaskRepository) {
+    Pattern pattern = Pattern.compile("([0-9\\.\\:\\s]{16})(\\s)([\\W+]+)"); // format like "01.01.1991 here_is_text"
+
+    public TelegramBotUpdatesListener(NotificationTaskRepository notificationTaskRepository, TelegramBot telegramBot) {
         this.notificationTaskRepository = notificationTaskRepository;
+        this.telegramBot = telegramBot;
     }
 
     @PostConstruct
@@ -48,28 +50,23 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         SendMessage message = new SendMessage(update.message().chat().id(), "привет тебе от бота!");
                         SendResponse response = telegramBot.execute(message);
                     } else {
-                        Pattern pattern = Pattern.compile("([0-9\\.\\:\\s]{16})(\\s)([\\W+]+)"); // format like "01.01.1991 here_is_text"
                         Matcher matcher = pattern.matcher(update.message().text());
-
                         if (!matcher.matches()) {
 
                             // processing pattern-invalid requests
-
                             logger.warn("invalid format of request");
                             SendMessage message = new SendMessage(update.message().chat().id(), "запрос не соответвует формату");
                             SendResponse response = telegramBot.execute(message);
 
                         } else {
-
-                            // save to database if request is patter-valid
-
+                            // save to database if request is pattern-valid
                             String date = matcher.group(1); // date + time from request
                             String item = matcher.group(3); // text part of request
 
                             logger.info("request saved: chatID: {}, DateTime: {}, Text: {}",update.message().chat().id(),date, item );
 
                             notificationTaskRepository.save(new NotificationTask(
-                                    (long) update.updateId(),
+                                    (long) 1,
                                     update.message().chat().id(),
                                     item,
                                     LocalDateTime.parse(date, DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
@@ -86,15 +83,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     // send reminders according to schedule
     @Scheduled(cron = "0 0/1 * * * *")
     public void getEventsCollection() {
-        LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         List<NotificationTask> eventsList = notificationTaskRepository.findByDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
 
         eventsList.forEach(notificationTask -> {
-            if (notificationTask.getDateTime().equals(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES))) {
                 SendMessage message = new SendMessage(notificationTask.getChatId(), notificationTask.getText());
                 logger.info ("reminder '{}' sent to chatID '{}'", notificationTask.getText(), notificationTask.getChatId());
                 SendResponse response = telegramBot.execute(message);
-            }
         });
     }
 }
