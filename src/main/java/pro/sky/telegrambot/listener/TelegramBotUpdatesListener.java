@@ -66,7 +66,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             logger.info("request saved: chatID: {}, DateTime: {}, Text: {}",update.message().chat().id(),date, item );
 
                             notificationTaskRepository.save(new NotificationTask(
-                                    (long) 1,
                                     update.message().chat().id(),
                                     item,
                                     LocalDateTime.parse(date, DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))

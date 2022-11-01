@@ -22,9 +22,9 @@ public class NotificationTask {
 
     private LocalDateTime dateTime;
 
-    public NotificationTask(Long id, long chatId, String text, LocalDateTime dateTime) {
+    public NotificationTask(long chatId, String text, LocalDateTime dateTime) {
         this.chatId = chatId;
-        this.text = text;   
+        this.text = text;
         this.dateTime = dateTime;
     }
 
