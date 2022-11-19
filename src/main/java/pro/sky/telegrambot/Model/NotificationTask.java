@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class NotificationTask {
 
     @Id
+    @GeneratedValue
     @Column (name = "id")
     private Long id;
 
@@ -21,8 +22,7 @@ public class NotificationTask {
 
     private LocalDateTime dateTime;
 
-    public NotificationTask(Long id, long chatId, String text, LocalDateTime dateTime) {
-        this.id = id;
+    public NotificationTask(long chatId, String text, LocalDateTime dateTime) {
         this.chatId = chatId;
         this.text = text;
         this.dateTime = dateTime;
@@ -54,10 +54,6 @@ public class NotificationTask {
 
     public void setDateTime(LocalDateTime dateTime) {
         this.dateTime = dateTime;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Long getId() {
